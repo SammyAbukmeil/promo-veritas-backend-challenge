@@ -16,3 +16,21 @@
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
+
+$router->group(['prefix' => 'api'], function () use ($router) {
+    // Promotion routes
+    $router->get('promotions', ['uses' => 'PromotionController@getAllPromotions']);
+
+    $router->get('promotion/{client}', ['uses' => 'PromotionController@getPromotionByClient']);
+
+    $router->post('promotion/{client}', ['uses' => 'PromotionController@create']);
+
+    $router->put('promotion/{id}', ['uses' => 'PromotionController@update']);
+
+    $router->delete('promotion/{id}', ['uses' => 'PromotionController@delete']);    
+
+    // Entrant routes
+    $router->post('entrant/winning-moment', ['uses' => 'EntrantController@checkWinningMomentWinner']);
+
+    $router->post('entrant/chance', ['uses' => 'EntrantController@checkChanceWinner']);
+  });
