@@ -17,7 +17,8 @@ This system exposes an API with various endpoints to:
 
 - Import Postman collection 
   - [Collection JSON file](https://gist.github.com/SammyAbukmeil/7cca86c26fa6057d8d06a90cdc814bb3)
-  - ([Documentation](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/))
+  - Save the JSON file to your computer, in postman, click import (top left) and select the file
+
 - Main requests
   - Create Promotion - Chance
   - Create entrant - Chance
