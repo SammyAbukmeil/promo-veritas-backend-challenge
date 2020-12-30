@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePromotionTable extends Migration
+class CreateEntrantTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,11 @@ class CreatePromotionTable extends Migration
      */
     public function up()
     {
-        Schema::create('promotions', function (Blueprint $table) {
+        Schema::create('entrants', function (Blueprint $table) {
             $table->id();
             $table->string('client');
-            $table->string('entry_fields');
-            $table->string('promotion_mechanic');
-            $table->dateTime('winning_moment_time', $precision = 0)->nullable();
-            $table->tinyInteger('winner_drawn');
-            $table->unsignedInteger('entry_count');
+            $table->string('name');
+            $table->string('email');
             $table->timestamps();
         });
     }
@@ -32,6 +29,6 @@ class CreatePromotionTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('promotion');
+        Schema::dropIfExists('entrant');
     }
 }
