@@ -6,7 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Promotion extends Model
 {
+    /**
+     * Flag to indicate that a winner has been drawn
+     */
     const WINNER_DRAWN = 1;
+
+    /**
+     * The expected name of the Winning Moment mechanic
+     */
+    const WINNING_MOMENT_MECHANISM_NAME = 'winning-moment';
+
+    /**
+     * The expected name of the Chance mechanic
+     */
+    const CHANCE_MECHANISM_NAME = 'chance';
 
     /**
      * The attributes that are mass assignable.

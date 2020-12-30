@@ -36,10 +36,6 @@ class PromotionController extends Controller
      */
     public function getPromotionByClient(string $client): JsonResponse
     {
-        // Todo: Use route model binding to automatically get the client from the URL
-        // Todo: get() returns a collection/array, can use first() to get the first result
-        // Todo: What if a client has multiple promotions? Perhaps getPromotionById
-
         return response()->json(Promotion::where('client', $client)->get());
     }
 

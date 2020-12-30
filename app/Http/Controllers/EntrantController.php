@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Entrant;
 use App\Promotion;
-use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -24,37 +23,16 @@ class EntrantController extends Controller
      */
     public function checkWinningMomentWinner(Request $request): JsonResponse
     {
-        // Todo: Move validation to form request (separate class ChanceRequest)
         $data = $request->all();
 
-        if (!array_key_exists('client', $data)) {
-            return response()->json(
-                "A client must be specified. Entry not submitted."
-            );
-        }
+        $this->validateRequest($request);
 
-        $promotion = Promotion::where('client', $data['client'])->first();
+        $promotion = $this->getPromotion($data['client']);
 
         $this->validateFields($request, $promotion);
 
-        if ($this->checkEmailAlreadyEntered($data['email'])) {
-            return response()->json(
-                "Entrant email has already been entered into the promotion. Entry not submitted."
-            );
-        }
-
-        $requiredFields = explode(',', $promotion->entry_fields);
-        $submittedFields = array_keys($data);
-
-        if (!empty(array_diff($submittedFields, $requiredFields))) {
-            return response()->json(
-                "This Promotion requires the following fields to
-                be submitted: " . $promotion->entry_fields . ". Entry not submitted."
-            );
-        }
-
         $mechanism = $promotion->getMechanism();
-        if ($mechanism !== 'winning-moment') {
+        if ($mechanism !== Promotion::WINNING_MOMENT_MECHANISM_NAME) {
             return response()->json(
                 "This Promotion is only accepting winning moment submissions, not ${mechanism} submissions."
                     . " Please use the correct endpoint. Entry not submitted."
@@ -64,28 +42,16 @@ class EntrantController extends Controller
         $winningMomentTime = $promotion->getWinningMomentTime();
         $timeOfEntry = date("Y-m-d H:i:s");
 
-        $winnerDrawn = $promotion->getWinnerDrawn();
-
         if ($timeOfEntry < $winningMomentTime) {
-            Entrant::create([
-                'client' => $data['client'],
-                'name' => Crypt::encryptString($data['name']),
-                'email' => Crypt::encryptString($data['email']),
-            ]);
-
-            $promotion->incrementEntryCount();
+            $this->createNonWinningEntrant($data, $promotion);
 
             return response()->json("Time of entry is before winning moment time. Not a winner.");
         }
 
-        if ($winnerDrawn) {
-            Entrant::create([
-                'client' => $data['client'],
-                'name' => Crypt::encryptString($data['name']),
-                'email' => Crypt::encryptString($data['email']),
-            ]);
+        $winnerDrawn = $promotion->getWinnerDrawn();
 
-            $promotion->incrementEntryCount();
+        if ($winnerDrawn) {
+            $this->createNonWinningEntrant($data, $promotion);
 
             return response()->json("A winner has already been drawn for this promotion. Not a winner.");
         }
@@ -113,27 +79,16 @@ class EntrantController extends Controller
      */
     public function checkChanceWinner(Request $request): JsonResponse
     {
-        // Todo: Move validation to form request (separate class ChanceRequest)
         $data = $request->all();
 
-        if (!array_key_exists('client', $data)) {
-            return response()->json(
-                "A client must be specified. Entry not submitted."
-            );
-        }
+        $this->validateRequest($request);
 
-        $promotion = Promotion::where('client', $data['client'])->first();
+        $promotion = $this->getPromotion($data['client']);
 
         $this->validateFields($request, $promotion);
 
-        if ($this->checkEmailAlreadyEntered($data['email'])) {
-            return response()->json(
-                "Entrant email has already been entered into the promotion. Entry not submitted."
-            );
-        }
-
         $mechanism = $promotion->getMechanism();
-        if ($mechanism !== 'chance') {
+        if ($mechanism !== Promotion::CHANCE_MECHANISM_NAME) {
             return response()->json(
                 "This Promotion is only accepting chance submissions, not ${mechanism} submissions."
                 . " Please use the correct endpoint. Entry not submitted."
@@ -147,8 +102,8 @@ class EntrantController extends Controller
         if ($entryCount % 5 !== 0) {
             Entrant::create([
                 'client' => $data['client'],
-                'name' => Crypt::encryptString($data['name']),
-                'email' => Crypt::encryptString($data['email']),
+                'name' => Hash::make($data['name']),
+                'email' => Hash::make($data['email']),
             ]);
 
             mail($data['email'], "Unsuccessful", "Thanks for entring, better luck next time!");
@@ -189,11 +144,46 @@ class EntrantController extends Controller
     }
 
     /**
-     * @param $email
-     * @return mixed
+     * @param array $data
+     * @param Promotion $promotion
      */
-    private function checkEmailAlreadyEntered($email)
+    private function createNonWinningEntrant(array $data, Promotion $promotion): void
     {
-        return Entrant::where('email', '=', $email)->exists();
+        Entrant::create([
+            'client' => $data['client'],
+            'name' => Hash::make($data['name']),
+            'email' => Hash::make($data['name']),
+        ]);
+
+        $promotion->incrementEntryCount();
+    }
+
+    /**
+     * @param $client
+     * @return Promotion $promotion
+     */
+    private function getPromotion($client): Promotion
+    {
+        $promotion = Promotion::where('client', $client)->first();
+
+        if (!$promotion) {
+            abort(404);
+        }
+
+        return $promotion;
+    }
+
+    /**
+     * @param $request
+     * @return JsonResponse|array
+     * @throws ValidationException
+     */
+    private function validateRequest($request)
+    {
+        if (!$this->validate($request, ['client' => 'required'])) {
+            return response()->json(
+                "A client must be specified. Entry not submitted.", 422
+            );
+        }
     }
 }
