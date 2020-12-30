@@ -10,7 +10,19 @@ This system exposes an API with various endpoints to:
 - `php -S localhost:8000 -t public`
 - Copy `.env.example` to `.env` 
 - Create `promo-veritas-promotions` MySQL DB and set in `.env` file
-- `php artisan key:generate`
+- Get a 32 length key from [here](http://www.unit-conversion.info/texttools/random-string-generator/) and add it to `APP_KEY` in `.env`
+- `php artisan migrate`
+
+# Interact with app
+
+- Import Postman collection 
+  - [Collection JSON file](https://gist.github.com/SammyAbukmeil/7cca86c26fa6057d8d06a90cdc814bb3)
+  - ([Documentation](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/))
+- Main requests
+  - Create Promotion - Chance
+  - Create entrant - Chance
+  - Create Promotion - Winning Moment
+  - Create entrant - Winning Moment
 
 # Notes
 
